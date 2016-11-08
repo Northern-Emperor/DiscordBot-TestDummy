@@ -4,7 +4,7 @@ import asyncio
 #This makes the bot be able to connect to discord
 client = discord.Client()
 #This is where the channel lists will be stored
-textChannels = ["205609645421625346"]
+textChannels = []
 voiceChannels = []
 #This is where the bot token will be stored
 token = ""
@@ -23,7 +23,8 @@ def get(file, type):
         voiceChannels = f.readline().split(";")
     elif(type is 'text'):
         global textChannels
-        textChannels = f.readLine().split(";")
+        textChannels = f.readline().split(";")
+        print(voiceChannels)
         
     #This closes the file *ALWAYS NEEDS TO BE DONE*
     f.close()
@@ -31,9 +32,18 @@ def get(file, type):
 #This is called on first connection to Discord, but sometimes after
 @client.event
 async def on_ready():
-    print('Logged in as')
+    #Prints Bot info to the console.
+    print('Logged in as:')
     print(client.user.name)
     print(client.user.id)
+    if(textChannels):
+        print('The bound text channels are:')
+        for channel in textChannels:
+            print(channel)
+    if(voiceChannels):
+        print('The bound voice channels are:')
+        for channel in voiceChannels:
+            print(channel)
     print('------')
 
 #These are the commands directly to the bot
@@ -59,6 +69,10 @@ async def on_message(message):
 def main():
     #Get the token from Token.txt
     get('Token.txt', 'token')
+    #Get the list of text channels from TextChannelList.txt
+    get('TextChannelList.txt', 'text')
+    #Get the list of voice channels from VoiceChannelList.txt
+    get('VoiceChannelList.txt', 'voice')
     #Checks if token seems viable
     if(len(token) is 59):
         client.run(token)
