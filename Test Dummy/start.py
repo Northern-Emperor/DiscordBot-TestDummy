@@ -1,6 +1,7 @@
 #This is where the code imports the modules it needs
 import discord
 import asyncio
+from sys import modules
 #This makes the bot be able to connect to discord
 client = discord.Client()
 #This is where the channel lists will be stored
@@ -8,6 +9,11 @@ textChannels = []
 voiceChannels = []
 #This is where the bot token will be stored
 token = ""
+#This is where the Message object is stored
+currentMsg = ''
+#This is the character is the command prefix
+prefix = '!'
+
 
 #This function pulls data from the text files
 def get(file, type):
@@ -24,8 +30,6 @@ def get(file, type):
     elif(type is 'text'):
         global textChannels
         textChannels = f.readline().split(";")
-        print(voiceChannels)
-        
     #This closes the file *ALWAYS NEEDS TO BE DONE*
     f.close()
 
@@ -49,23 +53,46 @@ async def on_ready():
 #These are the commands directly to the bot
 @client.event
 async def on_message(message):
+    #This makes sure the message is in on of the bound channels
     if(message.channel.id in textChannels):
-        #This has the bot count the number of messages between it and the user
-        if message.content.startswith('!test'):
-            counter = 0
-            tmp = await client.send_message(message.channel, 'Calculating messages...')
-            async for log in client.logs_from(message.channel, limit=100):
-                if log.author == message.author:
-                    counter += 1
-            await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-        #This makes the bot pretend to sleep
-        elif message.content.startswith('!sleep'):
-            await asyncio.sleep(5)
-            await client.send_message(message.channel, 'Done sleeping')
-        #This closes out the bot properly making it appear offline in the discord client
-        elif message.content.startswith('!shutdown'):
-            print('Shutting down')
-            await client.close()
+        #This cleans up the message and makes sure that it is a command
+        command = message.content.strip().lower()
+        if(command.startswith(prefix)):
+            command = command.lstrip(prefix)
+            global currentMsg
+            currentMsg = message
+            #This executes command if it exist or tells user the command doesn't exist
+            await getattr(modules[__name__], 'cmd_%s' %command, commandNotFound())()
+
+async def commandNotFound():
+    print('Invalid command received')
+    await client.send_message(currentChannel, 'Command was unable to be processed. Please check command and try again.')
+
+#These are the all the commands that can be used
+
+#This closes out the bot properly making it appear offline in the discord client
+async def cmd_shutdown():
+    print('Shutting Down')
+    await client.send_message(currentMsg.channel, 'Shutting Down')
+    await client.close()
+#This has the bot count the number of messages between it and the user
+async def cmd_test():
+    print('Running Test...')
+    counter = 0
+    tmp = await client.send_message(currentMsg.channel, 'Calculating messages...')
+    async for log in client.logs_from(currentMsg.channel, limit=100):
+        if log.author == currentMsg.author:
+            counter += 1
+    await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+    print('Test Complete')
+#This makes the bot pretend to sleep
+async def cmd_sleep():
+    print('Sleeping...')
+    await client.send_message(currentMsg.channel, 'Sleeping')
+    await asyncio.sleep(5)
+    await client.send_message(currentMsg.channel, 'Done sleeping')
+    print('Awake!')
+
 def main():
     #Get the token from Token.txt
     get('Token.txt', 'token')
