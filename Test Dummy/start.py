@@ -50,7 +50,6 @@ async def on_ready():
             print(channel)
     print('------')
 
-#These are the commands directly to the bot
 @client.event
 async def on_message(message):
     #This makes sure the message is in on of the bound channels
@@ -63,7 +62,7 @@ async def on_message(message):
             currentMsg = message
             #This executes command if it exist or tells user the command doesn't exist
             await getattr(modules[__name__], 'cmd_%s' %command, commandNotFound())()
-
+#This is called when a command doesn't exist
 async def commandNotFound():
     print('Invalid command received')
     await client.send_message(currentChannel, 'Command was unable to be processed. Please check command and try again.')
@@ -75,6 +74,7 @@ async def cmd_shutdown():
     print('Shutting Down')
     await client.send_message(currentMsg.channel, 'Shutting Down')
     await client.close()
+
 #This has the bot count the number of messages between it and the user
 async def cmd_test():
     print('Running Test...')
@@ -85,13 +85,16 @@ async def cmd_test():
             counter += 1
     await client.edit_message(tmp, 'You have {} messages.'.format(counter))
     print('Test Complete')
-#This makes the bot pretend to sleep
+
+#This makes the bot inactive for 5 seconds
 async def cmd_sleep():
     print('Sleeping...')
     await client.send_message(currentMsg.channel, 'Sleeping')
     await asyncio.sleep(5)
     await client.send_message(currentMsg.channel, 'Done sleeping')
     print('Awake!')
+
+async def cmd_speak
 
 def main():
     #Get the token from Token.txt
